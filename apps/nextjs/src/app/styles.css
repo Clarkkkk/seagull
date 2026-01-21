@@ -1,21 +1,19 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import "tw-animate-css";
-@import "@acme/tailwind-config/theme";
 
-@source "../../../../packages/ui/src/*.{ts,tsx}";
-
-@custom-variant dark (&:where(.dark, .dark *));
-@custom-variant light (&:where(.light, .light *));
-@custom-variant auto (&:where(.auto, .auto *));
-
-@utility container {
-  margin-inline: auto;
-  padding-inline: 2rem;
-  @media (width >= --theme(--breakpoint-sm)) {
-    max-width: none;
-  }
-  @media (width >= 1400px) {
-    max-width: 1400px;
+@layer components {
+  .container {
+    margin-inline: auto;
+    padding-inline: 2rem;
+    @media (min-width: 640px) {
+      max-width: none;
+    }
+    @media (min-width: 1400px) {
+      max-width: 1400px;
+    }
   }
 }
 
@@ -24,6 +22,7 @@
     @apply border-border;
   }
   body {
+    @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
 }
