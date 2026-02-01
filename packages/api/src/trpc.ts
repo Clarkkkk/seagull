@@ -11,7 +11,9 @@ import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
 import type { Auth } from "@acme/auth";
-import { db } from "@acme/db/client";
+import type { db as DbInstance } from "@acme/db/client";
+
+type Db = typeof DbInstance;
 
 /**
  * 1. CONTEXT
@@ -29,15 +31,34 @@ import { db } from "@acme/db/client";
 export const createTRPCContext = async (opts: {
   headers: Headers;
   auth: Auth;
+  db?: Db;
 }) => {
   const authApi = opts.auth.api;
-  const session = await authApi.getSession({
-    headers: opts.headers,
-  });
+
+  let session: Awaited<ReturnType<typeof authApi.getSession>>;
+  try {
+    session = await authApi.getSession({
+      headers: opts.headers,
+    });
+  } catch (err) {
+    console.error("[TRPC] auth.getSession failed", err);
+    session = null;
+  }
+
+  // NOTE: Avoid importing `@acme/db/client` at module load time so tests can run
+  // without `DATABASE_URL`. In production, when `opts.db` is not provided,
+  // we lazily import the real db client.
+  const resolvedDb =
+    opts.db ??
+    (await (async () => {
+      const mod = await import("@acme/db/client");
+      return mod.db;
+    })());
+
   return {
     authApi,
     session,
-    db,
+    db: resolvedDb,
   };
 };
 /**
