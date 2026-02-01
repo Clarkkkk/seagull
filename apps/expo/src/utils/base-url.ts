@@ -5,9 +5,12 @@ import Constants from "expo-constants";
  * setting the baseUrl to your production API URL.
  */
 export const getBaseUrl = () => {
+  const explicit = process.env.EXPO_PUBLIC_API_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+
   /**
    * Gets the IP address of your host-machine. If it cannot automatically find it,
-   * you'll have to manually set it. NOTE: Port 3000 should work for most but confirm
+   * you'll have to manually set it.
    * you don't have anything else running on it, or you'd have to change it.
    *
    * **NOTE**: This is only for development. In production, you'll want to set the
@@ -22,5 +25,6 @@ export const getBaseUrl = () => {
       "Failed to get localhost. Please point to your production server.",
     );
   }
-  return `http://${localhost}:3000`;
+  // Backend lives in apps/server (Fastify)
+  return `http://${localhost}:4000`;
 };

@@ -1,7 +1,8 @@
 import type { PropsWithChildren } from "react";
 import type { ScrollViewProps, ViewProps, ViewStyle } from "react-native";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import clsx from "clsx";
 
 import { OceanBackdrop } from "./ocean-backdrop";
 
@@ -36,7 +37,7 @@ export function Screen({
     return (
       <View
         style={[{ flex: 1 }, style]}
-        className={["bg-background", className].join(" ")}
+        className={clsx("bg-background", className)}
       >
         {tone === "ocean" ? <OceanBackdrop /> : null}
         <View style={{ flex: 1, padding: 16, paddingBottom: defaultBottomPadding }} {...rest}>
@@ -49,7 +50,7 @@ export function Screen({
   return (
     <View
       style={[{ flex: 1 }, style]}
-      className={["bg-background", className].join(" ")}
+      className={clsx("bg-background", className)}
     >
       {tone === "ocean" ? <OceanBackdrop /> : null}
       <ScrollView
@@ -57,7 +58,7 @@ export function Screen({
         className="flex-1"
         // On iOS, let the system adjust for navigation bars/safe areas so content isn't visually "cut".
         // contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName={["p-0", contentContainerClassName].join(" ")}
+        contentContainerClassName={clsx("p-0", contentContainerClassName)}
         contentContainerStyle={[
           { padding: 16, paddingBottom: defaultBottomPadding },
           contentContainerStyle,

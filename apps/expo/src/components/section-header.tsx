@@ -1,15 +1,13 @@
-import type { Href } from "expo-router";
-import { Link } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
 export function SectionHeader({
   title,
   actionText,
-  href,
+  onAction,
 }: {
   title: string;
   actionText?: string;
-  href?: Href;
+  onAction?: () => void;
 }) {
   return (
     <View className="mb-4 flex flex-row items-center justify-between">
@@ -18,14 +16,13 @@ export function SectionHeader({
         <View className="h-1.5 w-10 rounded-full bg-primary/15" />
         <Text className="text-foreground text-lg font-semibold">{title}</Text>
       </View>
-      {href && actionText ? (
-        <Link href={href} asChild>
-          <Pressable className="bg-primary/10 border-primary/15 rounded-full border px-3 py-1">
-            <Text className="text-primary text-sm font-semibold">
-              {actionText}
-            </Text>
-          </Pressable>
-        </Link>
+      {onAction && actionText ? (
+        <Pressable
+          onPress={onAction}
+          className="bg-primary/10 border-primary/15 rounded-full border px-3 py-1"
+        >
+          <Text className="text-primary text-sm font-semibold">{actionText}</Text>
+        </Pressable>
       ) : null}
     </View>
   );

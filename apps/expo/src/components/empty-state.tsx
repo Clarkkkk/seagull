@@ -1,11 +1,15 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 export function EmptyState({
   title,
   description,
+  actionLabel,
+  onAction,
 }: {
   title: string;
   description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   return (
     <View className="bg-card/80 border-border/70 rounded-2xl border p-5 shadow-sm dark:bg-card/60">
@@ -18,6 +22,16 @@ export function EmptyState({
         <Text className="text-muted-foreground mt-2 text-sm">
           {description}
         </Text>
+      ) : null}
+      {actionLabel && onAction ? (
+        <Pressable
+          onPress={onAction}
+          className="bg-primary/10 border-primary/15 mt-4 items-center rounded-md border px-3 py-2"
+        >
+          <Text className="text-primary text-sm font-semibold">
+            {actionLabel}
+          </Text>
+        </Pressable>
       ) : null}
     </View>
   );
