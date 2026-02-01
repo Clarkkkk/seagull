@@ -21,6 +21,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       light: "./assets/icon-light.png",
       dark: "./assets/icon-dark.png",
     },
+    // If you want Google Maps on iOS, set this key.
+    // Apple Maps works without it.
+    config: {
+      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+    },
   },
   android: {
     package: "com.seagull.project",
@@ -29,6 +34,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#1F104A",
     },
     edgeToEdgeEnabled: true,
+    config: {
+      googleMaps: {
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+      },
+    },
   },
   // extra: {
   //   eas: {
@@ -37,12 +47,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   // },
   experiments: {
     tsconfigPaths: true,
-    typedRoutes: true,
     reactCanary: true,
     reactCompiler: true,
   },
   plugins: [
-    "expo-router",
     "expo-secure-store",
     "expo-web-browser",
     [
