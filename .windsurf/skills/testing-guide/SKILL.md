@@ -22,23 +22,14 @@ When implementing a feature that touches backend/frontend:
    - Client: set `httpBatchLink({ headers: () => ({ 'x-test-user-id': userId }) })`
    - Server: in `createContext({ headers })`, read `headers.get('x-test-user-id')`
 
-4. **Test DB schema is migration-driven (no hand-written DDL)**:
-   - `packages/test-integration/src/db/pglite.ts` applies `packages/db/drizzle/*.sql`
-   - PGlite compatibility: we polyfill `gen_random_uuid()` used by Drizzle migrations
-   - This prevents schema drift when new columns/indexes/FKs are added.
-
 ## Where tests live
 
 - **Cross-layer**: `packages/test-integration/src/**`
   - in-memory tRPC fetch: `packages/test-integration/src/trpc/inMemoryFetch.ts`
   - PGlite DB harness: `packages/test-integration/src/db/pglite.ts`
-  - Drizzle migrations (source of truth): `packages/db/drizzle/`
   - example tests:
     - expiry: `packages/test-integration/src/trpc/tripLock.expiry.test.ts`
     - concurrency smoke: `packages/test-integration/src/trpc/tripLock.concurrent.test.ts`
-  - Expo business examples:
-    - trip/edit: `packages/test-integration/src/expo/trip/edit/**`
-    - wishlist: `packages/test-integration/src/expo/wishlist/**`
 - **Backend package tests**: `packages/api/src/**/*.test.ts`
 
 ## How to run
@@ -48,14 +39,6 @@ pnpm -F @acme/test-integration test
 pnpm -F @acme/test-integration typecheck
 pnpm -F @acme/api test
 pnpm -F @acme/api typecheck
-```
-
-## When DB schema changes
-
-After changing `packages/db/src/schema.ts` (or schema modules), update migrations so PGlite tests stay in sync:
-
-```bash
-pnpm -C packages/db exec drizzle-kit generate --dialect postgresql --driver pglite --schema ./src/schema.ts --casing snake_case --out ./drizzle --name <name>
 ```
 
 ## Test case style rules
@@ -68,14 +51,6 @@ pnpm -C packages/db exec drizzle-kit generate --dialect postgresql --driver pgli
 - **Avoid flakiness**:
   - prefer deterministic triggers over “sleep”
   - if time is essential, isolate it (DB state manipulation or controlled timers)
-
-## FK/seed policy (important after migrations reuse)
-
-- PGlite applies real FK/unique constraints from Drizzle migrations.
-- If you insert rows directly, **seed required parents first** (notably `"user"`).
-- Prefer seed helpers in `packages/test-integration/src/trpc/api/seed.ts`:
-  - `seedUser/seedTrip/seedWishlistJar/...` (helpers ensure required parents exist).
-- For router/hook tests that use `createApiTestServer()`, authenticated requests (via header or cookie `x-test-user-id`) will **auto-upsert `"user"`** to keep tests concise.
 
 ## Concurrency policy (locks/idempotency)
 
