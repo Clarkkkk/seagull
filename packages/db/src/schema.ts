@@ -10,7 +10,7 @@ export const Post = pgTable("post", (t) => ({
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
     .timestamp({ mode: "date", withTimezone: true })
-    .$onUpdateFn(() => sql`now()`),
+    .$onUpdateFn(() => new Date()),
 }));
 
 export const CreatePostSchema = createInsertSchema(Post, {
@@ -22,4 +22,7 @@ export const CreatePostSchema = createInsertSchema(Post, {
   updatedAt: true,
 });
 
+export * from "./schema/entities";
+export * from "./schema/trip";
+export * from "./schema/wishlist";
 export * from "./auth-schema";
