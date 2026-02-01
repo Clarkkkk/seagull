@@ -1,0 +1,28 @@
+{
+    "name": "@acme/server",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "dotenv -e ../../.env -- tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "typecheck": "tsc --noEmit",
+        "with-env": "dotenv -e ../../.env --"
+    },
+    "dependencies": {
+        "@acme/api": "workspace:*",
+        "@acme/auth": "workspace:*",
+        "@acme/db": "workspace:*",
+        "@fastify/cors": "^10.1.0",
+        "@trpc/server": "catalog:",
+        "@whatwg-node/server": "^0.10.18",
+        "fastify": "^5.3.3"
+    },
+    "devDependencies": {
+        "@acme/tsconfig": "workspace:*",
+        "@types/node": "catalog:",
+        "pino-pretty": "^13.1.1",
+        "tsx": "^4.20.5",
+        "typescript": "catalog:"
+    }
+}

@@ -1,5 +1,6 @@
 packages:
   - apps/*
+  - "!apps/tanstack-start"
   - packages/*
   - tooling/*
 
