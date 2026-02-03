@@ -22,17 +22,21 @@ When implementing a feature that touches backend/frontend:
    - Client: set `httpBatchLink({ headers: () => ({ 'x-test-user-id': userId }) })`
    - Server: in `createContext({ headers })`, read `headers.get('x-test-user-id')`
 
-4. **Test DB schema is migration-driven (no hand-written DDL)**:
-   - `packages/test-integration/src/db/pglite.ts` applies `packages/db/drizzle/*.sql`
-   - PGlite compatibility: we polyfill `gen_random_uuid()` used by Drizzle migrations
-   - This prevents schema drift when new columns/indexes/FKs are added.
+4. **Test DB schema is schema-driven (no hand-written DDL)**:
+   - `packages/test-integration/src/db/pglite.ts` applies a generated `packages/test-integration/src/db/schema.sql` (single file)
+   - Generate it from current Drizzle schema before running tests:
+     - `pnpm -F @acme/test-integration db:schema`
+   - `pnpm -F @acme/test-integration test` should run `db:schema` first (so forgetting to regenerate only breaks tests, not production).
+   - PGlite compatibility: we polyfill `gen_random_uuid()` used by Drizzle schema/DDL.
+   - This prevents schema drift and avoids migration ordering/duplication issues in tests.
 
 ## Where tests live
 
 - **Cross-layer**: `packages/test-integration/src/**`
   - in-memory tRPC fetch: `packages/test-integration/src/trpc/inMemoryFetch.ts`
   - PGlite DB harness: `packages/test-integration/src/db/pglite.ts`
-  - Drizzle migrations (source of truth): `packages/db/drizzle/`
+  - Test schema SQL (generated): `packages/test-integration/src/db/schema.sql`
+  - Generator script: `packages/test-integration/scripts/generate-schema-sql.mjs`
   - example tests:
     - expiry: `packages/test-integration/src/trpc/tripLock.expiry.test.ts`
     - concurrency smoke: `packages/test-integration/src/trpc/tripLock.concurrent.test.ts`
@@ -44,6 +48,7 @@ When implementing a feature that touches backend/frontend:
 ## How to run
 
 ```bash
+pnpm test
 pnpm -F @acme/test-integration test
 pnpm -F @acme/test-integration typecheck
 pnpm -F @acme/api test
@@ -52,10 +57,10 @@ pnpm -F @acme/api typecheck
 
 ## When DB schema changes
 
-After changing `packages/db/src/schema.ts` (or schema modules), update migrations so PGlite tests stay in sync:
+After changing `packages/db/src/schema.ts` (or schema modules), regenerate test schema SQL so PGlite tests stay in sync:
 
 ```bash
-pnpm -C packages/db exec drizzle-kit generate --dialect postgresql --driver pglite --schema ./src/schema.ts --casing snake_case --out ./drizzle --name <name>
+pnpm -F @acme/test-integration db:schema
 ```
 
 ## Test case style rules
