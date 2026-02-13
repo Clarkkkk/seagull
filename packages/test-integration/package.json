@@ -6,6 +6,7 @@
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "db:schema": "node ./scripts/generate-schema-sql.mjs",
     "test": "pnpm -w vitest run --config packages/test-integration/vitest.config.ts",
     "test:watch": "pnpm -w vitest --config packages/test-integration/vitest.config.ts",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"

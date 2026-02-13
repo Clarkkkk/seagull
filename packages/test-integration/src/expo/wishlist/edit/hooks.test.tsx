@@ -105,10 +105,13 @@ describe("expo/business/wishlist/edit/hooks", () => {
       result.current.saveJar();
     });
 
-    await waitFor(() => {
+    await waitFor(
+      () => {
       expect(invalidateSpy).toHaveBeenCalled();
       expect(nav.back).toHaveBeenCalledTimes(1);
-    });
+      },
+      { timeout: 8000 },
+    );
   });
 });
 

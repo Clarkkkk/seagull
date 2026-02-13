@@ -22,23 +22,45 @@ When implementing a feature that touches backend/frontend:
    - Client: set `httpBatchLink({ headers: () => ({ 'x-test-user-id': userId }) })`
    - Server: in `createContext({ headers })`, read `headers.get('x-test-user-id')`
 
+4. **Test DB schema is schema-driven (no hand-written DDL)**:
+   - `packages/test-integration/src/db/pglite.ts` applies a generated `packages/test-integration/src/db/schema.sql` (single file)
+   - Generate it from current Drizzle schema before running tests:
+     - `pnpm -F @acme/test-integration db:schema`
+   - `pnpm -F @acme/test-integration test` should run `db:schema` first (so forgetting to regenerate only breaks tests, not production).
+   - PGlite compatibility: we polyfill `gen_random_uuid()` used by Drizzle schema/DDL.
+   - This prevents schema drift and avoids migration ordering/duplication issues in tests.
+
 ## Where tests live
 
 - **Cross-layer**: `packages/test-integration/src/**`
   - in-memory tRPC fetch: `packages/test-integration/src/trpc/inMemoryFetch.ts`
   - PGlite DB harness: `packages/test-integration/src/db/pglite.ts`
+  - Test schema SQL (generated): `packages/test-integration/src/db/schema.sql`
+  - Generator script: `packages/test-integration/scripts/generate-schema-sql.mjs`
   - example tests:
     - expiry: `packages/test-integration/src/trpc/tripLock.expiry.test.ts`
     - concurrency smoke: `packages/test-integration/src/trpc/tripLock.concurrent.test.ts`
+  - Expo business examples:
+    - trip/edit: `packages/test-integration/src/expo/trip/edit/**`
+    - wishlist: `packages/test-integration/src/expo/wishlist/**`
 - **Backend package tests**: `packages/api/src/**/*.test.ts`
 
 ## How to run
 
 ```bash
+pnpm test
 pnpm -F @acme/test-integration test
 pnpm -F @acme/test-integration typecheck
 pnpm -F @acme/api test
 pnpm -F @acme/api typecheck
+```
+
+## When DB schema changes
+
+After changing `packages/db/src/schema.ts` (or schema modules), regenerate test schema SQL so PGlite tests stay in sync:
+
+```bash
+pnpm -F @acme/test-integration db:schema
 ```
 
 ## Test case style rules
@@ -51,6 +73,14 @@ pnpm -F @acme/api typecheck
 - **Avoid flakiness**:
   - prefer deterministic triggers over “sleep”
   - if time is essential, isolate it (DB state manipulation or controlled timers)
+
+## FK/seed policy (important after migrations reuse)
+
+- PGlite applies real FK/unique constraints from Drizzle migrations.
+- If you insert rows directly, **seed required parents first** (notably `"user"`).
+- Prefer seed helpers in `packages/test-integration/src/trpc/api/seed.ts`:
+  - `seedUser/seedTrip/seedWishlistJar/...` (helpers ensure required parents exist).
+- For router/hook tests that use `createApiTestServer()`, authenticated requests (via header or cookie `x-test-user-id`) will **auto-upsert `"user"`** to keep tests concise.
 
 ## Concurrency policy (locks/idempotency)
 

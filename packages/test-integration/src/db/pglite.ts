@@ -20,30 +20,26 @@ async function ensurePgCryptoCompat(client: PGlite) {
   `);
 }
 
-async function applyDrizzleMigrations(client: PGlite) {
+async function applyTestSchemaSql(client: PGlite) {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  // test-integration/src/db -> (..1) src -> (..2) test-integration -> (..3) packages -> db/drizzle
-  const migrationsDir = path.resolve(__dirname, "../../../db/drizzle");
+  const schemaSqlPath = path.resolve(__dirname, "./schema.sql");
+  const content = await fs.readFile(schemaSqlPath, "utf8").catch(() => null);
+  if (!content?.trim()) {
+    throw new Error(
+      `[test-db] Missing schema.sql. Run: pnpm -F @acme/test-integration db:schema`,
+    );
+  }
 
-  const entries = await fs.readdir(migrationsDir, { withFileTypes: true });
-  const sqlFiles = entries
-    .filter((e) => e.isFile() && e.name.endsWith(".sql"))
-    .map((e) => e.name)
-    // drizzle-kit uses a numeric prefix; lexicographic sort is ok here.
-    .sort((a, b) => a.localeCompare(b));
+  const statements = content
+    .split("--> statement-breakpoint")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  for (const file of sqlFiles) {
-    const full = path.join(migrationsDir, file);
-    const content = await fs.readFile(full, "utf8");
-    const statements = content
-      .split("--> statement-breakpoint")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    for (const stmt of statements) {
-      await client.exec(stmt);
-    }
+  // drizzle-kit generated SQL usually includes explicit breakpoints.
+  // As a fallback, if there is only one "statement", execute it as-is.
+  for (const stmt of statements.length ? statements : [content]) {
+    await client.exec(stmt);
   }
 }
 
@@ -74,7 +70,7 @@ export async function createPgliteTestDb() {
   const db = drizzle({ client, schema, casing: "snake_case" });
 
   await ensurePgCryptoCompat(client);
-  await applyDrizzleMigrations(client);
+  await applyTestSchemaSql(client);
   await resetDb(client);
 
   return {
@@ -82,7 +78,7 @@ export async function createPgliteTestDb() {
     db,
     ensureSchema: async () => {
       await ensurePgCryptoCompat(client);
-      await applyDrizzleMigrations(client);
+      await applyTestSchemaSql(client);
     },
     resetDb: async () => resetDb(client),
   };

@@ -3,9 +3,19 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
 import { desc, eq, sql } from "@acme/db";
-import { Trip, WishlistJar, WishlistJarTrip } from "@acme/db/schema";
+import { WishlistJar, WishlistJarTrip } from "@acme/db/schema";
 
 import { reverseGeocodeCached } from "../services/map-provider";
+import { parseWishlistLink } from "../services/wishlist/link-parser";
+import {
+  clearCover,
+  confirmJarImageUpload,
+  deleteJarImage,
+  listJarImages,
+  requestJarImageUpload,
+  setCoverFromImage,
+  setCoverFromUpload,
+} from "../services/wishlist/jar-images";
 import { protectedProcedure } from "../trpc";
 
 const JarStatusSchema = z.enum(["inactive", "in_trip", "archived"]);
@@ -116,6 +126,10 @@ export const wishlistRouter = {
           placeId: input.placeId,
         })
         .returning();
+
+      if (!created) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Create jar failed" });
+      }
 
       return created;
     }),
@@ -254,6 +268,102 @@ export const wishlistRouter = {
       });
 
       return { success: true };
+    }),
+
+  listImages: protectedProcedure
+    .input(z.object({ jarId: z.string().uuid() }))
+    .query(({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      return listJarImages({ db: ctx.db, jarId: input.jarId, userId });
+    }),
+
+  requestImageUpload: protectedProcedure
+    .input(
+      z.object({
+        jarId: z.string().uuid(),
+        contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+        kind: z.enum(["image", "cover"]),
+      }),
+    )
+    .mutation(({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      return requestJarImageUpload({
+        db: ctx.db,
+        jarId: input.jarId,
+        userId,
+        contentType: input.contentType,
+        kind: input.kind,
+      });
+    }),
+
+  confirmImageUpload: protectedProcedure
+    .input(
+      z.object({
+        jarId: z.string().uuid(),
+        key: z.string().min(1),
+        url: z.string().url(),
+        width: z.number().int().positive().optional().nullable(),
+        height: z.number().int().positive().optional().nullable(),
+      }),
+    )
+    .mutation(({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      return confirmJarImageUpload({
+        db: ctx.db,
+        jarId: input.jarId,
+        userId,
+        key: input.key,
+        url: input.url,
+        width: input.width,
+        height: input.height,
+      });
+    }),
+
+  deleteImage: protectedProcedure
+    .input(z.object({ jarId: z.string().uuid(), imageId: z.string().uuid() }))
+    .mutation(({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      return deleteJarImage({ db: ctx.db, jarId: input.jarId, userId, imageId: input.imageId });
+    }),
+
+  setCover: protectedProcedure
+    .input(
+      z.union([
+        z.object({ jarId: z.string().uuid(), imageId: z.string().uuid(), kind: z.literal("image") }),
+        z.object({
+          jarId: z.string().uuid(),
+          key: z.string().min(1),
+          url: z.string().url(),
+          kind: z.literal("upload"),
+        }),
+      ]),
+    )
+    .mutation(({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      if (input.kind === "image") {
+        return setCoverFromImage({ db: ctx.db, jarId: input.jarId, userId, imageId: input.imageId });
+      }
+      return setCoverFromUpload({
+        db: ctx.db,
+        jarId: input.jarId,
+        userId,
+        key: input.key,
+        url: input.url,
+      });
+    }),
+
+  clearCover: protectedProcedure
+    .input(z.object({ jarId: z.string().uuid() }))
+    .mutation(({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      return clearCover({ db: ctx.db, jarId: input.jarId, userId });
+    }),
+
+  parseLink: protectedProcedure
+    .input(z.object({ url: z.string().url() }))
+    .query(({ input }) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+      return parseWishlistLink(input.url);
     }),
 } satisfies TRPCRouterRecord;
 

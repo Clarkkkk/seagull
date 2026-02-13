@@ -158,5 +158,86 @@ describe("api.wishlist router", () => {
     const jar = await client.wishlist.getById.query({ id: UUIDS.jarA });
     expect(jar.jar.status).toBe("inactive");
   });
+
+  it("listImages returns jar images in created order", async () => {
+    await seedWishlistJar({ client: server.dbHarness.client, id: UUIDS.jarA, userId: userA, status: "inactive" });
+    const client = server.makeClient(userA);
+
+    const first = await client.wishlist.confirmImageUpload.mutate({
+      jarId: UUIDS.jarA,
+      key: "k1",
+      url: "https://img.example/1.jpg",
+    });
+    const second = await client.wishlist.confirmImageUpload.mutate({
+      jarId: UUIDS.jarA,
+      key: "k2",
+      url: "https://img.example/2.jpg",
+    });
+
+    const images = await client.wishlist.listImages.query({ jarId: UUIDS.jarA });
+    expect(images.map((img) => img.id)).toEqual([first?.id, second?.id]);
+  });
+
+  it("confirmImageUpload enforces the 9-image limit", async () => {
+    await seedWishlistJar({ client: server.dbHarness.client, id: UUIDS.jarA, userId: userA, status: "inactive" });
+    const client = server.makeClient(userA);
+
+    for (let i = 0; i < 9; i += 1) {
+      await client.wishlist.confirmImageUpload.mutate({
+        jarId: UUIDS.jarA,
+        key: `k-${i}`,
+        url: `https://img.example/${i}.jpg`,
+      });
+    }
+
+    await expect(
+      client.wishlist.confirmImageUpload.mutate({
+        jarId: UUIDS.jarA,
+        key: "k-over",
+        url: "https://img.example/overflow.jpg",
+      }),
+    ).rejects.toMatchObject({ data: { code: "BAD_REQUEST" } });
+  });
+
+  it("setCover and deleteImage fallback to first image", async () => {
+    await seedWishlistJar({ client: server.dbHarness.client, id: UUIDS.jarA, userId: userA, status: "inactive" });
+    const client = server.makeClient(userA);
+
+    const first = await client.wishlist.confirmImageUpload.mutate({
+      jarId: UUIDS.jarA,
+      key: "k1",
+      url: "https://img.example/1.jpg",
+    });
+    const second = await client.wishlist.confirmImageUpload.mutate({
+      jarId: UUIDS.jarA,
+      key: "k2",
+      url: "https://img.example/2.jpg",
+    });
+
+    await client.wishlist.setCover.mutate({ jarId: UUIDS.jarA, kind: "image", imageId: second!.id });
+    const withCover = await client.wishlist.getById.query({ id: UUIDS.jarA });
+    expect(withCover.jar.coverImageId).toBe(second?.id);
+
+    await client.wishlist.deleteImage.mutate({ jarId: UUIDS.jarA, imageId: second!.id });
+    const afterDelete = await client.wishlist.getById.query({ id: UUIDS.jarA });
+    expect(afterDelete.jar.coverImageId).toBe(first?.id);
+  });
+
+  it("parseLink returns parsed info for Xiaohongshu short URL", async () => {
+    const client = server.makeClient(userA);
+    const parsed = await client.wishlist.parseLink.query({
+      url: "http://xhslink.com/a/tyoREa3ciaAeb",
+    });
+
+    expect(parsed.provider).toBe("xiaohongshu");
+    expect(parsed.title).toBe("测试标题");
+    expect(parsed.content).toBe("测试内容");
+    expect(parsed.images).toHaveLength(2);
+  });
+
+  it("parseLink rejects invalid input", async () => {
+    const client = server.makeClient(userA);
+    await expectRejectsZod(client.wishlist.parseLink.query({ url: "not-a-url" as any }));
+  });
 });
 

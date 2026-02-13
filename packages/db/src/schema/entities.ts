@@ -68,6 +68,10 @@ export const WishlistJar = pgTable(
     placeProvider: text("place_provider").default("mapbox"), // mapbox
     placeId: text("place_id"),
 
+    coverImageId: uuid("cover_image_id"),
+    coverImageUrl: text("cover_image_url"),
+    coverImageKey: text("cover_image_key"),
+
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).$onUpdateFn(() => new Date()),
   },
@@ -84,6 +88,30 @@ export const WishlistJar = pgTable(
       table.placeProvider,
       table.placeId,
     ),
+  }),
+);
+
+export const WishlistJarImage = pgTable(
+  "wishlist_jar_image",
+  {
+    id: uuid("id").notNull().primaryKey().defaultRandom(),
+    jarId: uuid("jar_id")
+      .notNull()
+      .references(() => WishlistJar.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    key: text("key").notNull(),
+    width: integer("width"),
+    height: integer("height"),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at", { mode: "date", withTimezone: true }),
+  },
+  (table) => ({
+    jarIdIdx: index("wishlist_jar_image_jar_id_idx").on(table.jarId),
+    userIdIdx: index("wishlist_jar_image_user_id_idx").on(table.userId),
+    createdAtIdx: index("wishlist_jar_image_created_at_idx").on(table.createdAt),
   }),
 );
 

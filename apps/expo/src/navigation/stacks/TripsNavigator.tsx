@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useColorScheme } from "react-native";
 
 import type { TripsStackParamList } from "../types";
+import { getAppStackScreenOptions } from "../header/stack-options";
 import { TripsListScreen } from "~/screens/trips/TripsListScreen";
 import { TripNewScreen } from "~/screens/trips/TripNewScreen";
 import { TripDetailScreen } from "~/screens/trips/TripDetailScreen";
@@ -12,16 +13,10 @@ import { TripSnapshotDetailScreen } from "~/screens/trips/TripSnapshotDetailScre
 const Stack = createNativeStackNavigator<TripsStackParamList>();
 
 export function TripsNavigator() {
-  const isDark = useColorScheme() === "dark";
+  const colorScheme = useColorScheme();
 
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: isDark ? "#09090B" : "#FFFFFF" },
-        headerTintColor: isDark ? "#FFFFFF" : "#0F172A",
-        headerShadowVisible: false,
-      }}
-    >
+    <Stack.Navigator screenOptions={getAppStackScreenOptions(colorScheme)}>
       <Stack.Screen name="TripsIndex" component={TripsListScreen} options={{ title: "行程" }} />
       <Stack.Screen name="TripDetail" component={TripDetailScreen} options={{ title: "行程详情" }} />
       <Stack.Screen name="TripNew" component={TripNewScreen} options={{ title: "新建行程" }} />

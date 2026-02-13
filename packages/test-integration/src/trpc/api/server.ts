@@ -12,6 +12,7 @@ export async function createApiTestServer() {
 
   process.env.MAP_PROVIDER ??= "mapbox";
   process.env.MAPBOX_ACCESS_TOKEN ??= "test-token";
+  process.env.TIKHUB_API_TOKEN ??= "test-token";
 
   const testAuth = {
     api: {
@@ -104,6 +105,31 @@ export async function createApiTestServer() {
         status: 200,
         headers: { "content-type": "application/json" },
       });
+    }
+
+    if (url.startsWith("https://api.tikhub.io/api/v1/xiaohongshu/web_v2/")) {
+      return new Response(
+        JSON.stringify({
+          code: 200,
+          data: {
+            note: {
+              title: "测试标题",
+              desc: "测试内容",
+              images: [{ url: "https://img.example/xhs/1.jpg" }, { url: "https://img.example/xhs/2.jpg" }],
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    }
+
+    // Allow S3 presigned PUT URLs during Expo hook tests.
+    // (Only used for upload side effect; no need to validate signature in tests.)
+    if (url.includes(".amazonaws.com/") && init?.method === "PUT") {
+      return new Response(null, { status: 200 });
     }
 
     throw new Error(`[test] Unhandled fetch: ${url}`);

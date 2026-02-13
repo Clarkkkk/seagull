@@ -7,6 +7,31 @@ import { vi } from "vitest";
 process.env.EXPO_PUBLIC_API_URL ??= "http://test.local";
 
 /**
+ * Expo Modules Core expects a global `expo` object (native runtime).
+ * In node/jsdom tests we provide the minimal shape used by expo-modules-core
+ * so that packages like `expo-image-picker` can be safely mocked/imported.
+ */
+(globalThis as any).expo ??= {
+  modules: new Map([
+    [
+      "ExpoModulesCoreJSLogger",
+      {
+        // noop
+        log: () => undefined,
+      },
+    ],
+  ]),
+  EventEmitter: class {
+    addListener() {
+      return { remove: () => undefined };
+    }
+    removeAllListeners() {
+      return undefined;
+    }
+  },
+};
+
+/**
  * A delegating fetch so each test can switch the handler without re-importing modules.
  */
 let activeFetch: typeof fetch | null = null;
@@ -39,4 +64,5 @@ vi.mock("expo-constants", () => ({
     expoConfig: { hostUri: null },
   },
 }));
+
 

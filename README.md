@@ -2,7 +2,7 @@
 
 > [!NOTE]
 >
-> create-t3-turbo now includes the option to use Tanstack Start for the web app!
+> This repo was originally bootstrapped from create-t3-turbo; Tanstack Start is not used in this project.
 
 ## Installation
 
@@ -44,11 +44,9 @@ apps
   │   ├─ React 19
   │   ├─ Tailwind CSS v4
   │   └─ E2E Typesafe API Server & Client
-  └─ tanstack-start
-      ├─ Tanstack Start v1 (rc)
-      ├─ React 19
-      ├─ Tailwind CSS v4
-      └─ E2E Typesafe API Server & Client
+  └─ server
+      ├─ Fastify API server
+      └─ tRPC v11 + better-auth endpoints
 packages
   ├─ api
   │   └─ tRPC v11 router definition
@@ -82,7 +80,7 @@ To get it running, follow the steps below:
 
 > [!NOTE]
 >
-> While the repo does contain both a Next.js and Tanstack Start version of a web app, you can pick which one you like to use and delete the other folder before starting the setup.
+> This repo uses Expo (mobile) + Fastify (API) + optional Next.js (web frontend). Tanstack Start is excluded.
 
 ```bash
 # Install dependencies
@@ -205,7 +203,7 @@ Let's deploy the Next.js application to [Vercel](https://vercel.com). If you've 
 
 1. Create a new project on Vercel, select the `apps/nextjs` folder as the root directory. Vercel's zero-config system should handle all configurations for you.
 
-2. Add your `POSTGRES_URL` environment variable.
+2. Add your `DATABASE_URL` environment variable.
 
 3. Done! Your app should successfully deploy. Assign your domain and use that instead of `localhost` for the `url` in the Expo app so that your Expo app can communicate with your backend when you are not in development.
 

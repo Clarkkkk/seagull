@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useSession } from "~/utils/session-context";
 import { navigationRef } from "./nav";
 import type { RootStackParamList } from "./types";
+import { getAppStackScreenOptions } from "./header/stack-options";
 
 import { AuthNavigator } from "./stacks/AuthNavigator";
 import { TabsNavigator } from "./tabs/TabsNavigator";
@@ -34,7 +35,10 @@ export function RootNavigator() {
         <RootStack.Screen
           name="PickLocation"
           component={PickLocationScreen}
-          options={{ presentation: "fullScreenModal", headerShown: false }}
+          options={{
+            presentation: "fullScreenModal",
+            headerShown: false,
+          }}
         />
       </RootStack.Navigator>
     </NavigationContainer>

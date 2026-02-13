@@ -19,11 +19,13 @@
 选型点：
 - **in-memory fetch（tRPC server 侧）**：用 `fetchRequestHandler` 直接处理 `fetch(Request)`，不需要监听端口。
 - **PGlite（Postgres in WASM）**：提供接近 Postgres 的 SQL 语义，避免写大量 DB stub 造成漂移。
-- **复用 Drizzle 迁移（单一事实来源）**：测试 DB 直接 apply `packages/db/drizzle/*.sql`，不再维护手写 DDL，避免“新增字段/索引后测试库滞后”。
+- **复用 Drizzle schema（单一事实来源）**：测试 DB 使用 drizzle-kit 从 `packages/db/src/schema.ts` 生成一份全量 `schema.sql`，然后 PGlite 只执行这一份 SQL，避免迁移顺序/重复迁移导致的测试不稳定。
 - **复用后端 service**：测试 router 内部直接调用 `packages/api/src/services/**`，保证关键业务语义不漂移。
 
 关键实现文件：
 - DB harness：`packages/test-integration/src/db/pglite.ts`
+- 测试库 schema 生成脚本：`packages/test-integration/scripts/generate-schema-sql.mjs`
+- 测试库 schema 文件：`packages/test-integration/src/db/schema.sql`
 - in-memory tRPC fetch：`packages/test-integration/src/trpc/inMemoryFetch.ts`
 - test router（复用 lock-service）：`packages/test-integration/src/trpc/routers/tripLockTestRouter.ts`
 - Drizzle 迁移目录：`packages/db/drizzle/`
@@ -41,6 +43,12 @@
 
 ## 测试如何运行
 
+### 0) 一键跑全仓库测试（推荐）
+
+```bash
+pnpm test
+```
+
 ### 1) 跨层测试（推荐主力）：`packages/test-integration`
 
 ```bash
@@ -55,13 +63,16 @@ pnpm -F @acme/api test
 pnpm -F @acme/api typecheck
 ```
 
-### 3) 当你改了 DB schema：更新迁移（测试库会自动复用）
+### 3) 当你改了 DB schema：先生成测试库 schema.sql
 
-`packages/test-integration` 的 PGlite 会在启动时 apply `packages/db/drizzle/*.sql`。因此当你修改了 `packages/db/src/schema.ts`（或 schema 子模块）以后，需要更新迁移文件。
+`packages/test-integration` 的 PGlite 会在启动时执行 `packages/test-integration/src/db/schema.sql`。
+为了保证它与当前 `packages/db/src/schema.ts` 一致，你需要先运行一次生成命令。
 
 ```bash
-pnpm -C packages/db exec drizzle-kit generate --dialect postgresql --driver pglite --schema ./src/schema.ts --casing snake_case --out ./drizzle --name <name>
+pnpm -F @acme/test-integration db:schema
 ```
+
+注意：`pnpm -F @acme/test-integration test` 已经默认会先执行 `db:schema`，所以多数情况下直接跑测试即可。
 
 ## 用例写法规范
 

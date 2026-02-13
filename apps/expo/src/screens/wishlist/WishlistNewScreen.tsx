@@ -1,11 +1,16 @@
-import { Pressable, Text, TextInput, View, useColorScheme } from "react-native";
+import { Image, Pressable, Text, View, useColorScheme } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import clsx from "clsx";
 
 import { useWishlistNewJar } from "~/business/wishlist/new/hooks";
-import { Card, Screen } from "~/components";
+import { designTokens } from "~/utils/design-tokens";
+import { Input, Screen, Tag } from "~/components";
 
 export function WishlistNewScreen() {
+  const navigation = useNavigation<any>();
   const colorScheme = useColorScheme();
+  const tokens = designTokens[colorScheme === "dark" ? "dark" : "light"];
   const {
     name,
     setName,
@@ -18,106 +23,171 @@ export function WishlistNewScreen() {
     createJar,
     openPicker,
     saveJar,
+    pendingImages,
+    coverIndex,
+    setCoverIndex,
+    coverUri,
+    addImage,
+    removeImage,
+    isSaving,
   } = useWishlistNewJar();
 
-  return (
-    <Screen>
-      <View className="mb-4 gap-2 px-1">
-        <View className="flex flex-row items-start justify-between">
-          <View className="gap-1">
-            <Text className="text-foreground text-xl font-semibold">新建愿望罐子</Text>
-            <Text className="text-muted-foreground text-sm">
-              像收集海风一样，先把灵感轻轻装进来。
-            </Text>
-          </View>
-          <View className="bg-primary/10 border-primary/15 rounded-full border px-3 py-1">
-            <Text className="text-primary text-xs font-semibold">Ocean mode</Text>
-          </View>
-        </View>
-      </View>
+  const isPending = createJar.isPending;
 
-      <Card className="mb-4 gap-2 p-5">
-        <Text className="text-foreground text-sm font-semibold">名称</Text>
-        <View className="border-input bg-background/80 flex flex-row items-center gap-2 rounded-2xl border px-3 py-3">
-          <Ionicons
-            name="pricetag-outline"
-            size={18}
-            color={colorScheme === "dark" ? "#94A3B8" : "#64748B"}
-          />
-          <TextInput
-            className="text-foreground flex-1 text-base"
+  return (
+    <Screen tone="plain" contentPadding={24} safeTop>
+      <View className="gap-6">
+        {/* NavBar (per Pencil spec) */}
+        <View className="flex-row items-center justify-between">
+          <Pressable onPress={() => navigation.goBack()} className="flex-row items-center gap-2">
+            <Ionicons name="chevron-back" size={20} color={tokens.textPrimary} />
+            <Text className="text-primary text-base font-semibold">返回</Text>
+          </Pressable>
+
+          <Text className="text-foreground text-[17px] font-semibold">New Place</Text>
+
+          <Pressable disabled={!canSave} onPress={() => void saveJar()}>
+            <Text className={clsx("text-base font-semibold", canSave ? "text-primary" : "text-muted-foreground")}>
+              {isPending || isSaving ? "Saving..." : "Save"}
+            </Text>
+          </Pressable>
+        </View>
+
+        <View className="gap-2">
+          <Text className="text-foreground text-sm font-semibold">封面</Text>
+          <Pressable
+            disabled={isSaving || pendingImages.length >= 9}
+            onPress={() => void addImage()}
+            className="border-stroke-strong bg-surface-muted overflow-hidden rounded-2xl border-2"
+            style={{ height: 180, borderRadius: 16 }}
+          >
+            {coverUri ? (
+              <Image source={{ uri: coverUri }} className="h-full w-full" resizeMode="cover" />
+            ) : (
+              <View className="h-full w-full items-center justify-center gap-2">
+                <Ionicons name="image-outline" size={28} color={tokens.textTertiary} />
+                <Text className="text-muted-foreground text-sm font-semibold">添加封面图</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+
+        <View className="gap-2">
+          <Text className="text-foreground text-sm font-semibold">Name</Text>
+          <Input
+            left={<Ionicons name="pricetag-outline" size={18} color={tokens.textTertiary} />}
             value={name}
             onChangeText={setName}
             placeholder="例如：东京美食清单"
-            placeholderTextColor={colorScheme === "dark" ? "#64748B" : "#94A3B8"}
+            placeholderTextColor={tokens.textTertiary}
             returnKeyType="next"
           />
         </View>
-      </Card>
 
-      <Card className="mb-4 gap-2 p-5">
-        <Text className="text-foreground text-sm font-semibold">地址</Text>
-        <Pressable onPress={openPicker}>
-          <View className="border-input bg-background/80 flex flex-row items-center justify-between rounded-2xl border px-3 py-3">
-            <View className="flex-1 pr-3">
-              <Text
-                className={[
-                  "text-base font-semibold",
-                  pickedLocation ? "text-foreground" : "text-muted-foreground",
-                ].join(" ")}
-                numberOfLines={1}
-              >
-                {displayLocationPrimary ?? "选择地点"}
-              </Text>
-              <Text className="text-muted-foreground mt-1 text-xs" numberOfLines={1}>
+        <View className="gap-2">
+          <Text className="text-foreground text-sm font-semibold">Location</Text>
+          <Pressable onPress={openPicker}>
+            <View className="gap-1">
+              <Input
+                left={<Ionicons name="location-outline" size={18} color={tokens.textTertiary} />}
+                right={<Ionicons name="chevron-forward" size={18} color={tokens.textTertiary} />}
+                value={displayLocationPrimary ?? ""}
+                placeholder="选择地点"
+                placeholderTextColor={tokens.textTertiary}
+                editable={false}
+              />
+              <Text className="text-muted-foreground px-1 text-xs" numberOfLines={1}>
                 {displayLocationSecondary ?? "进入地图选点"}
               </Text>
             </View>
-            <Ionicons
-              name="chevron-forward"
-              size={18}
-              color={colorScheme === "dark" ? "#94A3B8" : "#64748B"}
-            />
-          </View>
-        </Pressable>
-      </Card>
+          </Pressable>
+        </View>
 
-      <Card className="mb-4 gap-3 p-5">
-        <Text className="text-foreground text-sm font-semibold">笔记</Text>
-        <View className="border-input bg-background/80 flex flex-row items-start gap-2 rounded-2xl border px-3 py-3">
-          <Ionicons
-            name="document-text-outline"
-            size={18}
-            color={colorScheme === "dark" ? "#94A3B8" : "#64748B"}
-          />
-          <TextInput
-            className="text-foreground flex-1 text-base"
+        <View className="gap-2">
+          <Text className="text-foreground text-sm font-semibold">Notes</Text>
+          <Input
+            left={<Ionicons name="document-text-outline" size={18} color={tokens.textTertiary} />}
             value={note}
             onChangeText={setNote}
             placeholder="写点什么（可选）"
-            placeholderTextColor={colorScheme === "dark" ? "#64748B" : "#94A3B8"}
+            placeholderTextColor={tokens.textTertiary}
             multiline
+            textAlignVertical="top"
+            style={{ height: 120 }}
+            containerClassName="items-start py-4"
           />
         </View>
-      </Card>
 
-      <View className="gap-3">
-        <Pressable
-          className={["rounded-2xl px-4 py-3 shadow-sm", canSave ? "bg-primary" : "bg-muted"].join(
-            " ",
-          )}
-          disabled={!canSave}
-          onPress={saveJar}
-        >
-          <Text
-            className={[
-              "text-center font-semibold",
-              canSave ? "text-primary-foreground" : "text-muted-foreground",
-            ].join(" ")}
-          >
-            {createJar.isPending ? "保存中..." : "保存罐子"}
-          </Text>
-        </Pressable>
+        {/* Tags (placeholder, visual-only) */}
+        <View className="gap-2">
+          <Text className="text-foreground text-sm font-semibold">Tags</Text>
+          <View className="flex-row flex-wrap gap-2">
+            <Tag>Sunset</Tag>
+            <Tag>Photography</Tag>
+            <Tag variant="outline" textClassName="text-muted-foreground">
+              + Add
+            </Tag>
+          </View>
+        </View>
+
+        {/* Photos */}
+        <View className="gap-2">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-foreground text-sm font-semibold">图片</Text>
+            <Text className="text-muted-foreground text-sm font-semibold">{pendingImages.length}/9</Text>
+          </View>
+          <View className="border-stroke-subtle bg-card rounded-2xl border p-3" style={{ borderRadius: 16 }}>
+            <View className="gap-2">
+              <View className="flex-row gap-2">
+                <Pressable
+                  disabled={pendingImages.length >= 9 || isSaving}
+                  onPress={() => void addImage()}
+                  className="border-stroke-subtle bg-brand-light flex-1 items-center justify-center rounded-xl border"
+                  style={{ height: 108, borderRadius: 12 }}
+                >
+                  <Ionicons name="add" size={22} color={tokens.textTertiary} />
+                  <Text className="text-muted-foreground mt-1 text-xs font-semibold">添加</Text>
+                </Pressable>
+                <View className="bg-brand-light flex-1 rounded-xl" style={{ height: 108, borderRadius: 12 }} />
+                <View className="bg-brand-light flex-1 rounded-xl" style={{ height: 108, borderRadius: 12 }} />
+              </View>
+
+              <View className="flex-row flex-wrap gap-2">
+                {pendingImages.map((img, idx) => {
+                  const isCover = idx === coverIndex;
+                  return (
+                    <View key={`${img.uri}-${idx}`} style={{ width: "31.5%" }}>
+                      <View className="relative">
+                        <Pressable disabled={isSaving} onPress={() => setCoverIndex(idx)}>
+                          <Image
+                            source={{ uri: img.uri }}
+                            className="w-full rounded-xl"
+                            style={{ height: 108, borderRadius: 12 }}
+                          />
+                          {isCover ? (
+                            <View className="bg-primary absolute bottom-2 left-2 rounded-full px-2 py-1">
+                              <Text className="text-primary-foreground text-[10px] font-semibold">封面</Text>
+                            </View>
+                          ) : null}
+                        </Pressable>
+                        <Pressable
+                          className="bg-card absolute right-2 top-2 h-6 w-6 items-center justify-center rounded-full"
+                          onPress={() => removeImage(idx)}
+                        >
+                          <Ionicons name="close" size={12} color={tokens.textTertiary} />
+                        </Pressable>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+
+              <Text className="text-muted-foreground text-center text-xs font-semibold">
+                最多可添加 9 张，点击右上角可删除
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
     </Screen>
   );

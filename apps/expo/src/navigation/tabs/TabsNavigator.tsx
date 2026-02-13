@@ -9,13 +9,20 @@ import { WishlistNavigator } from "../stacks/WishlistNavigator";
 import { TripsNavigator } from "../stacks/TripsNavigator";
 import { MeNavigator } from "../stacks/MeNavigator";
 
-const BRAND_PRIMARY = "#1E88E5";
-const INACTIVE = "#95A5A6";
+import { designTokens, hexToRgbaCss } from "~/utils/design-tokens";
+
+function withAlpha(hex: string, alpha: number) {
+  const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `${hex}${a}`;
+}
 
 const Tab = createBottomTabNavigator<AppTabsParamList>();
 
 export function TabsNavigator() {
   const isDark = useColorScheme() === "dark";
+  const tokens = designTokens[isDark ? "dark" : "light"];
   const insets = useSafeAreaInsets();
   const tabBarHeight = 56 + insets.bottom;
 
@@ -23,11 +30,11 @@ export function TabsNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: BRAND_PRIMARY,
-        tabBarInactiveTintColor: INACTIVE,
+        tabBarActiveTintColor: tokens.accentPrimary,
+        tabBarInactiveTintColor: tokens.textTertiary,
         tabBarStyle: {
-          backgroundColor: isDark ? "rgba(9, 9, 11, 0.92)" : "rgba(255, 255, 255, 0.92)",
-          borderTopColor: isDark ? "#27272A" : "#EAEAEA",
+          backgroundColor: hexToRgbaCss(withAlpha(tokens.bgSurface, 0.92)),
+          borderTopColor: tokens.borderSubtle,
           height: tabBarHeight,
           paddingTop: 6,
           paddingBottom: Math.max(insets.bottom, 6),

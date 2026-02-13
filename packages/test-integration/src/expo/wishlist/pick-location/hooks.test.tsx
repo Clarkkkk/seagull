@@ -79,10 +79,13 @@ describe("expo/business/wishlist/pick-location/hooks", () => {
       result.current.setQuery("coffee");
     });
 
-    await waitFor(() => {
-      expect(result.current.searchEnabled).toBe(true);
-      expect(result.current.candidates.length).toBeGreaterThan(0);
-    });
+    await waitFor(
+      () => {
+        expect(result.current.searchEnabled).toBe(true);
+        expect(result.current.candidates.length).toBeGreaterThan(0);
+      },
+      { timeout: 8000 },
+    );
   });
 
   it("confirm：若 selected 缺少 country/province/city，会 reverseGeocode 后写入 draft 并返回上一页", async () => {

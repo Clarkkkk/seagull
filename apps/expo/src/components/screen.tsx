@@ -11,6 +11,8 @@ type Props = PropsWithChildren<
     scroll?: boolean;
     contentContainerClassName?: string;
     contentContainerStyle?: ScrollViewProps["contentContainerStyle"];
+    contentPadding?: number;
+    safeTop?: boolean;
     style?: ViewStyle;
     tone?: "ocean" | "plain";
   } & ViewProps &
@@ -23,6 +25,8 @@ export function Screen({
   className,
   contentContainerClassName,
   contentContainerStyle,
+  contentPadding = 16,
+  safeTop = false,
   refreshControl,
   style,
   tone = "ocean",
@@ -33,6 +37,8 @@ export function Screen({
   // This is a pragmatic default for tab screens; stack-only screens can override via `contentContainerStyle`.
   const defaultBottomPadding = 16 + 24 + insets.bottom + 56;
 
+  const paddingTop = contentPadding + (safeTop ? insets.top : 0);
+
   if (!scroll) {
     return (
       <View
@@ -40,7 +46,15 @@ export function Screen({
         className={clsx("bg-background", className)}
       >
         {tone === "ocean" ? <OceanBackdrop /> : null}
-        <View style={{ flex: 1, padding: 16, paddingBottom: defaultBottomPadding }} {...rest}>
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: contentPadding,
+            paddingTop,
+            paddingBottom: defaultBottomPadding,
+          }}
+          {...rest}
+        >
           {children}
         </View>
       </View>
@@ -60,7 +74,7 @@ export function Screen({
         // contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName={clsx("p-0", contentContainerClassName)}
         contentContainerStyle={[
-          { padding: 16, paddingBottom: defaultBottomPadding },
+          { paddingHorizontal: contentPadding, paddingTop, paddingBottom: defaultBottomPadding },
           contentContainerStyle,
         ]}
         refreshControl={refreshControl}

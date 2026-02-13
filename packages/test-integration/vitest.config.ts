@@ -28,6 +28,7 @@ export default defineConfig({
       { find: "react-native", replacement: path.resolve(__dirname, "./src/expo/mocks/react-native.ts") },
       { find: "expo-constants", replacement: path.resolve(__dirname, "./src/expo/mocks/expo-constants.ts") },
       { find: "expo-secure-store", replacement: path.resolve(__dirname, "./src/expo/mocks/expo-secure-store.ts") },
+      { find: "expo-image-picker", replacement: path.resolve(__dirname, "./src/expo/mocks/expo-image-picker.ts") },
 
       // React Navigation pulls native-only modules; we stub it for business-hook tests.
       {

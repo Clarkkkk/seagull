@@ -1,104 +1,90 @@
 import { vars } from "nativewind";
 
+import { designTokens, hexToRgbVar, hexToRgbaCss } from "./design-tokens";
+
 // NativeWind runs on React Native (no DOM), so CSS variables must be applied
 // via `vars()` on a parent View style, not via `:root` selectors.
 
-export const lightThemeVars = vars({
-  "--background": "250 250 249",
-  "--foreground": "42 62 80",
-  "--card": "255 255 255",
-  "--card-foreground": "42 62 80",
-  "--popover": "255 255 255",
-  "--popover-foreground": "42 62 80",
-  "--primary": "28 140 233",
-  "--primary-foreground": "255 255 255",
-  "--secondary": "235 246 255",
-  "--secondary-foreground": "66 74 82",
-  "--muted": "244 248 251",
-  "--muted-foreground": "79 92 109",
-  "--accent": "235 246 255",
-  "--accent-foreground": "28 140 233",
-  "--destructive": "220 40 40",
-  "--destructive-foreground": "255 255 255",
-  "--border": "224 235 245",
-  "--input": "255 255 255",
-  "--ring": "28 140 233",
-  "--chart-1": "28 140 233",
-  "--chart-2": "150 201 237",
-  "--chart-3": "40 200 160",
-  "--chart-4": "144 161 162",
-  "--chart-5": "242 234 222",
-  "--sidebar": "246 244 245",
-  "--sidebar-foreground": "80 73 79",
-  "--sidebar-primary": "28 140 233",
-  "--sidebar-primary-foreground": "255 255 255",
-  "--sidebar-accent": "242 237 241",
-  "--sidebar-accent-foreground": "28 140 233",
-  "--sidebar-border": "238 227 236",
-  "--sidebar-ring": "28 140 233",
-  "--radius": "0.75rem",
-  "--shadow-2xs": "0px 2px 10px 0px rgb(0 0 0 / 0.03)",
-  "--shadow-xs": "0px 2px 10px 0px rgb(0 0 0 / 0.03)",
-  "--shadow-sm":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.05), 0px 1px 2px -1px rgb(0 0 0 / 0.05)",
-  "--shadow":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.05), 0px 1px 2px -1px rgb(0 0 0 / 0.05)",
-  "--shadow-md":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.05), 0px 2px 4px -1px rgb(0 0 0 / 0.05)",
-  "--shadow-lg":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.05), 0px 4px 6px -1px rgb(0 0 0 / 0.05)",
-  "--shadow-xl":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.05), 0px 8px 10px -1px rgb(0 0 0 / 0.05)",
-  "--shadow-2xl": "0px 2px 10px 0px rgb(0 0 0 / 0.13)",
-  "--tracking-normal": "0rem",
-});
+function makeThemeVars(theme: "light" | "dark") {
+  const t = designTokens[theme];
+  const shadowSubtle = hexToRgbaCss(t.shadowSubtle);
 
-export const darkThemeVars = vars({
-  "--background": "51 41 49",
-  "--foreground": "248 247 248",
-  "--card": "51 41 49",
-  "--card-foreground": "248 247 248",
-  "--popover": "51 41 49",
-  "--popover-foreground": "248 247 248",
-  "--primary": "71 172 255",
-  "--primary-foreground": "51 41 49",
-  "--secondary": "73 55 69",
-  "--secondary-foreground": "196 171 193",
-  "--muted": "73 55 69",
-  "--muted-foreground": "176 141 170",
-  "--accent": "73 55 69",
-  "--accent-foreground": "71 172 255",
-  "--destructive": "161 38 38",
-  "--destructive-foreground": "255 255 255",
-  "--border": "87 61 82",
-  "--input": "73 55 69",
-  "--ring": "71 172 255",
-  "--chart-1": "71 172 255",
-  "--chart-2": "28 140 233",
-  "--chart-3": "40 200 160",
-  "--chart-4": "144 161 162",
-  "--chart-5": "242 234 222",
-  "--sidebar": "59 48 57",
-  "--sidebar-foreground": "196 171 193",
-  "--sidebar-primary": "71 172 255",
-  "--sidebar-primary-foreground": "51 41 49",
-  "--sidebar-accent": "73 55 69",
-  "--sidebar-accent-foreground": "71 172 255",
-  "--sidebar-border": "87 61 83",
-  "--sidebar-ring": "71 172 255",
-  "--shadow-2xs": "0px 2px 10px 0px rgb(0 0 0 / 0.1)",
-  "--shadow-xs": "0px 2px 10px 0px rgb(0 0 0 / 0.1)",
-  "--shadow-sm":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.2), 0px 1px 2px -1px rgb(0 0 0 / 0.2)",
-  "--shadow":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.2), 0px 1px 2px -1px rgb(0 0 0 / 0.2)",
-  "--shadow-md":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.2), 0px 2px 4px -1px rgb(0 0 0 / 0.2)",
-  "--shadow-lg":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.2), 0px 4px 6px -1px rgb(0 0 0 / 0.2)",
-  "--shadow-xl":
-    "0px 2px 10px 0px rgb(0 0 0 / 0.2), 0px 8px 10px -1px rgb(0 0 0 / 0.2)",
-  "--shadow-2xl": "0px 2px 10px 0px rgb(0 0 0 / 0.5)",
-  "--tracking-normal": "0rem",
-});
+  return vars({
+    // Design-tokens namespace (for fine-grained UI matching)
+    "--bg-primary": hexToRgbVar(t.bgPrimary),
+    "--bg-surface": hexToRgbVar(t.bgSurface),
+    "--bg-muted": hexToRgbVar(t.bgMuted),
+    "--bg-elevated": hexToRgbVar(t.bgElevated),
+
+    "--text-primary": hexToRgbVar(t.textPrimary),
+    "--text-secondary": hexToRgbVar(t.textSecondary),
+    "--text-tertiary": hexToRgbVar(t.textTertiary),
+
+    "--border-subtle": hexToRgbVar(t.borderSubtle),
+    "--border-strong": hexToRgbVar(t.borderStrong),
+
+    "--accent-primary": hexToRgbVar(t.accentPrimary),
+    "--accent-light": hexToRgbVar(t.accentLight),
+    "--accent-sky": hexToRgbVar(t.accentSky),
+    "--accent-mint": hexToRgbVar(t.accentMint),
+    "--accent-coral": hexToRgbVar(t.accentCoral),
+    "--accent-warm": hexToRgbVar(t.accentWarm),
+
+    // Base semantic tokens (existing Tailwind classnames rely on these)
+    "--background": hexToRgbVar(t.bgPrimary),
+    "--foreground": hexToRgbVar(t.textPrimary),
+    "--card": hexToRgbVar(t.bgSurface),
+    "--card-foreground": hexToRgbVar(t.textPrimary),
+    "--popover": hexToRgbVar(t.bgSurface),
+    "--popover-foreground": hexToRgbVar(t.textPrimary),
+    "--primary": hexToRgbVar(t.accentPrimary),
+    "--primary-foreground": "255 255 255",
+    "--secondary": hexToRgbVar(t.accentLight),
+    "--secondary-foreground": hexToRgbVar(t.textPrimary),
+    "--muted": hexToRgbVar(t.bgMuted),
+    "--muted-foreground": hexToRgbVar(t.textSecondary),
+    "--accent": hexToRgbVar(t.bgElevated),
+    "--accent-foreground": hexToRgbVar(t.accentPrimary),
+    "--destructive": "220 40 40",
+    "--destructive-foreground": "255 255 255",
+    "--border": hexToRgbVar(t.borderSubtle),
+    "--input": hexToRgbVar(t.bgSurface),
+    "--ring": hexToRgbVar(t.accentPrimary),
+
+    // Used by OceanBackdrop and charts
+    "--chart-1": hexToRgbVar(t.accentPrimary),
+    "--chart-2": hexToRgbVar(t.accentSky),
+    "--chart-3": hexToRgbVar(t.accentMint),
+    "--chart-4": hexToRgbVar(t.accentCoral),
+    "--chart-5": hexToRgbVar(t.accentWarm),
+
+    // Sidebar tokens (not heavily used in Expo, but keep consistent)
+    "--sidebar": hexToRgbVar(t.bgSurface),
+    "--sidebar-foreground": hexToRgbVar(t.textSecondary),
+    "--sidebar-primary": hexToRgbVar(t.accentPrimary),
+    "--sidebar-primary-foreground": "255 255 255",
+    "--sidebar-accent": hexToRgbVar(t.accentLight),
+    "--sidebar-accent-foreground": hexToRgbVar(t.accentPrimary),
+    "--sidebar-border": hexToRgbVar(t.borderSubtle),
+    "--sidebar-ring": hexToRgbVar(t.accentPrimary),
+
+    // Keep radius scale (we'll use Tailwind's built-ins in UI)
+    "--radius": "0.75rem",
+
+    // Shadows (match the design's subtle “aqua” shadow color)
+    "--shadow-2xs": `0px 2px 12px 0px ${shadowSubtle}`,
+    "--shadow-xs": `0px 2px 12px 0px ${shadowSubtle}`,
+    "--shadow-sm": `0px 2px 12px 0px ${shadowSubtle}, 0px 1px 2px -1px ${shadowSubtle}`,
+    "--shadow": `0px 2px 14px 0px ${shadowSubtle}, 0px 1px 2px -1px ${shadowSubtle}`,
+    "--shadow-md": `0px 6px 18px 0px ${shadowSubtle}, 0px 2px 6px -2px ${shadowSubtle}`,
+    "--shadow-lg": `0px 10px 24px 0px ${shadowSubtle}, 0px 4px 10px -4px ${shadowSubtle}`,
+    "--shadow-xl": `0px 16px 30px 0px ${shadowSubtle}, 0px 6px 16px -6px ${shadowSubtle}`,
+    "--shadow-2xl": `0px 22px 40px 0px ${shadowSubtle}`,
+
+    "--tracking-normal": "0rem",
+  });
+}
+
+export const lightThemeVars = makeThemeVars("light");
+export const darkThemeVars = makeThemeVars("dark");
 
